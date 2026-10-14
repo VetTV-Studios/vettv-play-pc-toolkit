@@ -1,0 +1,19 @@
+name: build
+on:
+  push: { branches: [main] }
+  pull_request:
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: '8.0.x' }
+      - run: dotnet restore VetTV.PlayPC.sln
+      - run: dotnet build VetTV.PlayPC.sln -c Release --no-restore
+      - run: dotnet test VetTV.PlayPC.sln -c Release --no-build
+      - name: Pester tests
+        shell: pwsh
+        run: |
+          Install-Module Pester -MinimumVersion 5.0 -Force -Scope CurrentUser -SkipPublisherCheck
+          Invoke-Pester -Path tests/powershell -CI
