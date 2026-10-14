@@ -26,7 +26,16 @@ public sealed class GpuInspector(ISystemProbe probe)
             yield return Assess(a, hybridHasDiscrete: discrete.Count > 0 && !IsDiscrete(a));
         if (discrete.Count > 0 && adapters.Count > discrete.Count)
             yield return CheckResult.Warn("gpu.hybrid", Cat, "Hybrid graphics",
-                $"This PC has integrated + discrete GPUs. Google Play Games should run on {discrete[0].Name}.", GpuPrefHint);
+                $"This PC has integrated + discrete GPUs. Google Play Games should run on {discrete[0].Name}.", HybridHint(discrete[0]));
+    }
+
+    internal static string HybridHint(GpuAdapter discrete)
+    {
+        var hint = GpuPrefHint + " (Fix tab > 'Use the high-performance GPU' does this for you and can be undone.)";
+        if (discrete.Name.Contains("NVIDIA", StringComparison.OrdinalIgnoreCase))
+            hint += " On NVIDIA Optimus laptops you can also set NVIDIA Control Panel > Manage 3D settings > Program Settings > Google Play Games > 'High-performance NVIDIA processor'."
+                  + " If the laptop has a MUX switch (e.g. MSI Center > GPU Switch / 'Discrete Graphics Mode'), discrete-only mode also works but costs battery.";
+        return hint;
     }
 
     internal static bool IsDiscrete(GpuAdapter a)
@@ -56,6 +65,10 @@ public sealed class GpuInspector(ISystemProbe probe)
         if (n.Contains("R9 M390", StringComparison.OrdinalIgnoreCase) || n.Contains("R9 M3", StringComparison.OrdinalIgnoreCase))
             return CheckResult.Warn(id, Cat, n, $"{drv}. May not meet requirements; AMD no longer ships drivers for this GPU (Boot Camp).",
                 "Use the latest Boot Camp/AMD driver available. The toolkit won't block you, but games may fail or run slowly.");
+
+        if (n.Contains("RTX 3050", StringComparison.OrdinalIgnoreCase) && n.Contains("Laptop", StringComparison.OrdinalIgnoreCase))
+            return CheckResult.Pass(id, Cat, n, $"{drv}. Well above the guideline (4 GB VRAM). Plug in the charger for full GPU power."
+                + (a.DriverDate is { } d3 && d3 < DateTime.Now.AddYears(-1) ? " Driver is over a year old; consider updating via GeForce/NVIDIA App or MSI's support page." : ""));
 
         if (a.DriverDate is { } dd && dd < DateTime.Now.AddYears(-2))
             return CheckResult.Warn(id, Cat, n, $"{drv}. Driver is over 2 years old.", "Update the GPU driver from your GPU or PC maker.");

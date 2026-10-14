@@ -17,3 +17,16 @@ jobs:
         run: |
           Install-Module Pester -MinimumVersion 5.0 -Force -Scope CurrentUser -SkipPublisherCheck
           Invoke-Pester -Path tests/powershell -CI
+      - name: Installer smoke build (unsigned, not published)
+        shell: pwsh
+        run: |
+          dotnet tool install --global wix --version 5.0.2
+          ./installer/build-installer.ps1 -Version 0.0.0
+          Get-ChildItem artifacts -File | Format-Table Name, Length
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-installer-ci
+          path: |
+            artifacts/*.msi
+            artifacts/SHA256SUMS.txt
+          retention-days: 7

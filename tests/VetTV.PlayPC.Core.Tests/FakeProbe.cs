@@ -18,7 +18,7 @@ internal sealed class FakeProbe : ISystemProbe
 
     public IReadOnlyList<UninstallEntry> GetUninstallEntries() => Uninstall;
     public bool DirectoryExists(string path) => Dirs.Contains(path);
-    public bool FileExists(string path) => FileVersions.ContainsKey(path);
+    public bool FileExists(string path) => FileVersions.ContainsKey(path) || FileVersions.ContainsKey(path.Replace('/', '\\'));
     public string? GetFileVersion(string path) => FileVersions.GetValueOrDefault(path);
     public IReadOnlyList<string> GetRunningProcessNames() => Processes;
     public IReadOnlyList<ProcessorInfo> GetProcessors() => Cpus;

@@ -1,0 +1,17 @@
+{
+  "_comment": "Expected shape of Vet's MSI laptop (RTX 3050 4GB Laptop + Intel UHD, Optimus). Synthetic values; replace with real ones after running the MSI checklist.",
+  "os": { "caption": "Microsoft Windows 11 Home", "version": "10.0.26100", "build": 26100 },
+  "ramBytes": 17179869184,
+  "hypervisorPresent": true,
+  "cpus": [ { "name": "12th Gen Intel(R) Core(TM) i5-12450H", "cores": 8, "logical": 12, "vtFirmware": false } ],
+  "features": { "HypervisorPlatform": true, "VirtualMachinePlatform": true, "Microsoft-Hyper-V-All": false },
+  "gpus": [
+    { "name": "Intel(R) UHD Graphics", "driverVersion": "31.0.101.5186", "driverAgeDays": 200, "adapterRam": 1073741824 },
+    { "name": "NVIDIA GeForce RTX 3050 Laptop GPU", "driverVersion": "32.0.15.6614", "driverAgeDays": 60, "adapterRam": 4293918720 }
+  ],
+  "uninstall": [
+    { "displayName": "Google Play Games", "displayVersion": "25.9.1000.5", "installLocation": "C:\\Program Files\\Google\\Play Games" },
+    { "displayName": "Google Play Games Developer Emulator", "displayVersion": "25.9.1000.5", "installLocation": "C:\\Program Files\\Google\\Play Games Developer Emulator" }
+  ],
+  "files": [ "C:\\Program Files\\Google\\Play Games Developer Emulator\\current\\emulator\\adb.exe" ]
+}

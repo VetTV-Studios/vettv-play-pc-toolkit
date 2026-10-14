@@ -1,0 +1,10 @@
+{
+  "_comment": "Consumer client only: sideloading must be refused.",
+  "os": { "caption": "Microsoft Windows 11 Home", "version": "10.0.22631", "build": 22631 },
+  "ramBytes": 17179869184, "hypervisorPresent": true,
+  "cpus": [ { "name": "Generic 4-core", "cores": 4, "logical": 8, "vtFirmware": true } ],
+  "features": { "HypervisorPlatform": true },
+  "gpus": [ { "name": "NVIDIA GeForce RTX 4060", "driverVersion": "1", "driverAgeDays": 10 } ],
+  "uninstall": [ { "displayName": "Google Play Games", "displayVersion": "25.9.1000.5", "installLocation": "C:\\Program Files\\Google\\Play Games" } ],
+  "files": []
+}

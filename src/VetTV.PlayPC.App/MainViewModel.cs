@@ -18,6 +18,7 @@ public partial class MainViewModel : ObservableObject
     public ObservableCollection<CheckResult> Results { get; } = new();
     public string Disclaimer => ToolkitInfo.Disclaimer;
     public FixLaunchViewModel Fix { get; } = new();
+    public DeveloperViewModel Developer { get; } = new();
 
     [ObservableProperty] [NotifyCanExecuteChangedFor(nameof(RunCommand), nameof(ExportCommand))] private bool _isBusy;
     [ObservableProperty] private string _status = "Click 'Run diagnostics' to check this PC.";

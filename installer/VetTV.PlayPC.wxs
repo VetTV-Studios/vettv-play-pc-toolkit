@@ -1,0 +1,28 @@
+<!-- VetTV Play PC Toolkit MSI (WiX Toolset v5). Built by installer/build-installer.ps1. Not affiliated with Google. -->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="VetTV Play PC Toolkit" Manufacturer="VetTV Studios" Version="$(Version)"
+           UpgradeCode="5d0f8f0e-7a3b-4c51-9a8e-2f6b1c3d9e47" Scope="perMachine" Compressed="yes">
+    <SummaryInformation Description="VetTV Play PC Toolkit. Not affiliated with Google." />
+    <MajorUpgrade DowngradeErrorMessage="A newer version of VetTV Play PC Toolkit is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="VetTV Play PC Toolkit" />
+    </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="AppMenuFolder" Name="VetTV Play PC Toolkit" />
+    </StandardDirectory>
+
+    <Feature Id="Main" Title="VetTV Play PC Toolkit">
+      <Files Directory="INSTALLFOLDER" Include="$(PublishDir)\**" />
+      <ComponentRef Id="StartMenuShortcut" />
+    </Feature>
+
+    <Component Id="StartMenuShortcut" Directory="AppMenuFolder" Guid="b8a4e9d2-3c61-4f0a-8d7e-91c2a5f3e6b0">
+      <Shortcut Id="AppShortcut" Name="VetTV Play PC Toolkit" Description="Helper for Google Play Games on PC (not affiliated with Google)"
+                Target="[INSTALLFOLDER]VetTV.PlayPC.App.exe" WorkingDirectory="INSTALLFOLDER" />
+      <RemoveFolder Id="RemoveAppMenuFolder" On="uninstall" />
+      <RegistryValue Root="HKLM" Key="Software\VetTV\PlayPCToolkit" Name="StartMenuShortcut" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+  </Package>
+</Wix>

@@ -1,0 +1,61 @@
+name: release
+# Builds a release ONLY from a version tag (vMAJOR.MINOR.PATCH). Creates a DRAFT GitHub Release for review.
+# Signing is optional: set repo secrets SIGNING_CERT_PFX_BASE64 + SIGNING_CERT_PASSWORD to sign; otherwise the build is unsigned.
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: '8.0.x' }
+      - name: Version from tag
+        id: v
+        shell: pwsh
+        run: |
+          $v = '${{ github.ref_name }}'.TrimStart('v')
+          if ($v -notmatch '^\d+\.\d+\.\d+$') { throw "Bad tag $v" }
+          "version=$v" >> $env:GITHUB_OUTPUT
+      - run: dotnet test VetTV.PlayPC.sln -c Release
+      - run: dotnet tool install --global wix --version 5.0.2
+      - name: Prepare signing certificate (only if secrets exist)
+        shell: pwsh
+        env:
+          CERT_B64: ${{ secrets.SIGNING_CERT_PFX_BASE64 }}
+          CERT_PW: ${{ secrets.SIGNING_CERT_PASSWORD }}
+        run: |
+          if ($env:CERT_B64 -and $env:CERT_PW) {
+            $p = Join-Path $env:RUNNER_TEMP 'sign.pfx'
+            [IO.File]::WriteAllBytes($p, [Convert]::FromBase64String($env:CERT_B64))
+            "SIGN_PFX_PATH=$p" >> $env:GITHUB_ENV
+            "SIGN_PFX_PASSWORD=$env:CERT_PW" >> $env:GITHUB_ENV
+            Write-Host 'Signing certificate found.'
+          } else { Write-Warning 'No signing secrets: this release will be UNSIGNED.' }
+      - name: Build installer
+        shell: pwsh
+        run: ./installer/build-installer.ps1 -Version ${{ steps.v.outputs.version }}
+      - name: winget manifests
+        shell: pwsh
+        run: |
+          $v = '${{ steps.v.outputs.version }}'
+          $name = "VetTV.PlayPC.Toolkit-$v-x64.msi"
+          ./installer/winget/New-WingetManifest.ps1 -Version $v -MsiPath "artifacts/$name" `
+            -MsiUrl "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/$name"
+          Compress-Archive artifacts/winget/* "artifacts/winget-manifests-$v.zip"
+      - name: Remove certificate
+        if: always()
+        shell: pwsh
+        run: Remove-Item (Join-Path $env:RUNNER_TEMP 'sign.pfx') -ErrorAction SilentlyContinue
+      - name: Create draft release
+        shell: pwsh
+        env: { GH_TOKEN: '${{ github.token }}' }
+        run: |
+          $signed = (Get-Content artifacts/SIGNING.txt) -eq 'signed=true'
+          $note = if ($signed) { 'Signed build.' } else { '**Unsigned build**: Windows SmartScreen will warn on first run.' }
+          $files = Get-ChildItem artifacts -File | ForEach-Object FullName
+          gh release create '${{ github.ref_name }}' $files --draft --title 'VetTV Play PC Toolkit ${{ github.ref_name }}' `
+            --notes "$note Not affiliated with Google. Verify downloads with SHA256SUMS.txt."

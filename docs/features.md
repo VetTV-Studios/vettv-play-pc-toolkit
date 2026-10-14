@@ -21,3 +21,9 @@ Every system-changing action is opt-in and asks for confirmation first.
 - **Launcher**: finds game shortcuts in the Start Menu `Google Play Games` folders, then launches them, copies them to the Desktop, pins them, or adds them to Steam as a non-Steam game. The Steam entry opens your own shortcut file through Explorer. Steam must be closed, and `shortcuts.vdf` is backed up to `shortcuts.vdf.vettv.bak` first.
 - **Cache cleaner**: works only in these folders under `%LOCALAPPDATA%`: `Google\Play Games\{Cache,GPUCache,Code Cache,ShaderCache}` and `Google\Play Games Developer Emulator\{Cache,GPUCache}`. It always shows a preview with sizes first, refuses to run while Google Play Games is open, skips symlinks/junctions, re-checks every path before cleaning, and sends files to the Recycle Bin. *Verify that these folder names match what's actually on your machine.*
 - **Backup/restore**: the toolkit's own `settings.json` plus the shortcuts it created, in a zip.
+
+## M3: Developer Emulator & Polish
+- **Sideloading (Developer Emulator only)**: connect to `localhost:6520` with the Emulator's bundled `adb.exe` (`...\Play Games Developer Emulator\current\emulator\adb.exe`); install `.apk` (`adb install -r`) or `.aab` (with your own `bundletool.jar`: `build-apks --connected-device` then `install-apks`); list user-installed packages; uninstall a selected package (validated name). If only the consumer client is installed, it refuses and explains why.
+- **Logcat viewer**: live `adb logcat -v time`, with an optional validated `Tag:Priority` filter and a 5,000-line rolling buffer. Diagnostics export (M1) already includes `AndroidSerial.log`.
+- **Controller tips**: see [controller-tips.md](controller-tips.md).
+- **Installer**: MSI (WiX v5, per-machine, Start Menu shortcut, upgrades cleanly) + portable zip + SHA256SUMS + winget manifests, built by the tag-only release workflow. See [releasing.md](releasing.md).

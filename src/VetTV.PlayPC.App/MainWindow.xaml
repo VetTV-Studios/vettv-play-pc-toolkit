@@ -97,6 +97,47 @@
           </DataGrid>
         </DockPanel>
       </TabItem>
+
+      <TabItem Header="Developer Emulator" DataContext="{Binding Developer}">
+        <DockPanel Margin="8">
+          <TextBlock DockPanel.Dock="Top" Text="{Binding Disclaimer}" TextWrapping="Wrap" FontWeight="Bold" Margin="0,0,0,8"/>
+          <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
+            <Button Content="Connect" Command="{Binding ConnectCommand}" Padding="10,3" Margin="0,0,8,0"/>
+            <Button Content="Refresh apps" Command="{Binding RefreshPackagesCommand}" Padding="10,3" Margin="0,0,8,0"/>
+            <Button Content="Install APK/AAB..." Command="{Binding InstallCommand}" Padding="10,3" Margin="0,0,8,0"/>
+            <Button Content="Uninstall selected" Command="{Binding UninstallCommand}" Padding="10,3" Margin="0,0,16,0"/>
+            <TextBlock Text="bundletool.jar:" VerticalAlignment="Center" Margin="0,0,4,0"/>
+            <TextBox Text="{Binding BundletoolPath}" Width="200" Margin="0,0,4,0"/>
+            <Button Content="..." Command="{Binding BrowseBundletoolCommand}" Padding="6,2"/>
+          </StackPanel>
+          <TextBlock DockPanel.Dock="Bottom" Text="{Binding Status}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+          <Grid>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="260"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+            <ListBox ItemsSource="{Binding Packages}" SelectedItem="{Binding SelectedPackage}" Margin="0,0,8,0"/>
+            <DockPanel Grid.Column="1">
+              <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,4">
+                <TextBlock Text="Logcat filter (e.g. MyGame:D *:S):" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                <TextBox Text="{Binding LogFilter}" Width="180" Margin="0,0,8,0"/>
+                <Button Content="Start / stop logcat" Command="{Binding ToggleLogcatCommand}" Padding="10,2"/>
+              </StackPanel>
+              <ListBox ItemsSource="{Binding LogLines}" FontFamily="Consolas" FontSize="11" VirtualizingPanel.IsVirtualizing="True"/>
+            </DockPanel>
+          </Grid>
+        </DockPanel>
+      </TabItem>
+
+      <TabItem Header="Controller tips" DataContext="{Binding Developer}">
+        <ScrollViewer Margin="8">
+          <ItemsControl ItemsSource="{Binding Tips}">
+            <ItemsControl.ItemTemplate><DataTemplate>
+              <StackPanel Margin="0,0,0,10">
+                <TextBlock Text="{Binding Title}" FontWeight="Bold"/>
+                <TextBlock Text="{Binding Body}" TextWrapping="Wrap"/>
+              </StackPanel>
+            </DataTemplate></ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </TabItem>
     </TabControl>
   </DockPanel>
 </Window>
