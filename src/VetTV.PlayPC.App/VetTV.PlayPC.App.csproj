@@ -5,5 +5,5 @@
     <Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup><PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" /></ItemGroup>
-  <ItemGroup><ProjectReference Include="..\VetTV.PlayPC.Core\VetTV.PlayPC.Core.csproj" /></ItemGroup>
+  <ItemGroup><ProjectReference Include="..\VetTV.PlayPC.Core\VetTV.PlayPC.Core.csproj" /><ProjectReference Include="..\VetTV.PlayPC.Elevated\VetTV.PlayPC.Elevated.csproj" /></ItemGroup>
 </Project>
