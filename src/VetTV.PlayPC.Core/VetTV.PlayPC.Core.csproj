@@ -1,3 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
+  <ItemGroup><PackageReference Include="System.Management" Version="8.0.0" /></ItemGroup>
+  <ItemGroup><InternalsVisibleTo Include="VetTV.PlayPC.Core.Tests" /></ItemGroup>
 </Project>

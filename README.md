@@ -5,7 +5,7 @@ An original Windows 10/11 helper for **Google Play Games on PC**: diagnostics, v
 > **Not affiliated with Google.** This is an independent community project by VetTV Studios. It is not made, endorsed, or supported by Google. "Google Play" is a trademark of Google LLC.
 
 ## Status
-M0 (foundations): solution skeleton and CI only. No features yet.
+M1 (Diagnose): read-only install detection, system/virtualization checks, GPU/driver report, and a redacted diagnostics zip. See [docs/features.md](docs/features.md).
 
 ## Layout
 - `src/VetTV.PlayPC.App`: WPF app (MVVM)

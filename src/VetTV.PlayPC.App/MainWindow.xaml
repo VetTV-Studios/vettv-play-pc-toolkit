@@ -1,8 +1,32 @@
 <Window x:Class="VetTV.PlayPC.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="VetTV Play PC Toolkit" Height="600" Width="900">
-  <Grid>
-    <TextBlock x:Name="Footer" VerticalAlignment="Bottom" Margin="12" Opacity="0.7" />
-  </Grid>
+        Title="VetTV Play PC Toolkit" Height="640" Width="960">
+  <DockPanel Margin="12">
+    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
+      <Button Content="Run diagnostics" Command="{Binding RunCommand}" Padding="12,4" Margin="0,0,8,0"/>
+      <Button Content="Export diagnostics zip..." Command="{Binding ExportCommand}" Padding="12,4" Margin="0,0,16,0"/>
+      <CheckBox Content="Redact user names / emails" IsChecked="{Binding Redact}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+      <CheckBox Content="Include DxDiag" IsChecked="{Binding IncludeDxDiag}" VerticalAlignment="Center"/>
+    </StackPanel>
+    <TextBlock DockPanel.Dock="Bottom" Text="{Binding Disclaimer}" Opacity="0.7" Margin="0,8,0,0"/>
+    <TextBlock DockPanel.Dock="Bottom" Text="{Binding Status}" Margin="0,8,0,0"/>
+    <DataGrid ItemsSource="{Binding Results}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column">
+      <DataGrid.Columns>
+        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="60"/>
+        <DataGridTextColumn Header="Area" Binding="{Binding Category}" Width="80"/>
+        <DataGridTextColumn Header="Check" Binding="{Binding Title}" Width="200"/>
+        <DataGridTemplateColumn Header="Details / fix" Width="*">
+          <DataGridTemplateColumn.CellTemplate>
+            <DataTemplate>
+              <StackPanel>
+                <TextBlock Text="{Binding Detail}" TextWrapping="Wrap"/>
+                <TextBlock Text="{Binding FixHint, StringFormat=Fix: {0}}" TextWrapping="Wrap" Foreground="DarkOrange"/>
+              </StackPanel>
+            </DataTemplate>
+          </DataGridTemplateColumn.CellTemplate>
+        </DataGridTemplateColumn>
+      </DataGrid.Columns>
+    </DataGrid>
+  </DockPanel>
 </Window>
