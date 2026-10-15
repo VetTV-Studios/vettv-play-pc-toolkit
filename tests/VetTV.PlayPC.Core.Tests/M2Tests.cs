@@ -134,11 +134,11 @@ public class CacheCleanerTests
     public void NeverTouchesPathsOutsideAllowList()
     {
         using var t = new TempDir();
-        var cache = t.Combine(Rel(@"Google\Play Games\Cache"));
+        var cache = t.Combine(Rel(@"Google\Play Games\image_cache"));
         Directory.CreateDirectory(Path.Combine(cache, "sub"));
         File.WriteAllText(Path.Combine(cache, "a.bin"), "x");
         File.WriteAllText(Path.Combine(cache, "sub", "b.bin"), "yy");
-        var userData = t.Combine(Rel(@"Google\Play Games\UserData"));
+        var userData = t.Combine(Rel(@"Google\Play Games\Logs"));
         Directory.CreateDirectory(userData);
         var keep = Path.Combine(userData, "save.dat");
         File.WriteAllText(keep, "precious");
@@ -153,13 +153,64 @@ public class CacheCleanerTests
         var tampered = new CachePreview(preview.Files.Concat(new[]
         {
             new CacheFile(keep, 8),
-            new CacheFile(Path.Combine(cache, "..", "UserData", "save.dat"), 8),
+            new CacheFile(Path.Combine(cache, "..", "Logs", "save.dat"), 8),
         }).ToList(), Array.Empty<string>());
         var (ok, refused, _) = c.Clean(tampered, gpgpcRunning: false);
         Assert.Equal(2, ok);
         Assert.Equal(2, refused);
         Assert.True(File.Exists(keep));
         Assert.All(bin.Recycled, p => Assert.True(c.IsAllowed(p)));
+    }
+
+    [Theory]
+    [InlineData(@"Google\Play Games\Logs\client.log")]
+    [InlineData(@"Google\Play Games\CrashReporting\r.dmp")]
+    [InlineData(@"Google\Play Games\startup_flags\f")]
+    [InlineData(@"Google\Play Games\userdata_0.cmi")]
+    [InlineData(@"Google\Play Games\userdata_abc.cmi\x")]
+    [InlineData(@"Google\Play Games\CEF\User Data\Default\Cookies")]
+    [InlineData(@"Google\Play Games\CEF\User Data\Default\Local Storage\leveldb\000003.log")]
+    [InlineData(@"Google\Play Games\CEF\Cache")]
+    [InlineData(@"Google\Play Games\CEF\a\b\c\d\Cache\deep.bin")]
+    [InlineData(@"Google\Play Games\CEF\Cache\Logs\x")]
+    [InlineData(@"Google\Play Games\image_cache\..\Logs\client.log")]
+    [InlineData(@"Google\Play Games Developer Emulator\Cache\x")]
+    public void NeverAllowed_RealNonCacheFolders(string rel)
+    {
+        using var t = new TempDir();
+        Assert.False(new CacheCleaner(t.Path, new FakeBin()).IsAllowed(t.Combine(Rel(rel))));
+    }
+
+    [Theory]
+    [InlineData(@"Google\Play Games\CEF\Cache\data_0")]
+    [InlineData(@"Google\Play Games\CEF\User Data\Default\Cache\Cache_Data\f_000001")]
+    [InlineData(@"Google\Play Games\CEF\User Data\Default\Code Cache\js\index")]
+    [InlineData(@"Google\Play Games\CEF\GPUCache\data_1")]
+    [InlineData(@"Google\Play Games\CEF\User Data\GrShaderCache\data_0")]
+    public void Allowed_CefCacheSubfoldersOnly(string rel)
+    {
+        using var t = new TempDir();
+        Assert.True(new CacheCleaner(t.Path, new FakeBin()).IsAllowed(t.Combine(Rel(rel))));
+    }
+
+    [Fact]
+    public void Preview_RealLayout_FindsOnlyCaches()
+    {
+        using var t = new TempDir();
+        void Make(string rel) { var f = t.Combine(Rel(rel)); Directory.CreateDirectory(Path.GetDirectoryName(f)!); File.WriteAllText(f, "x"); }
+        Make(@"Google\Play Games\image_cache\a.png");
+        Make(@"Google\Play Games\profile_image_cache\p.png");
+        Make(@"Google\Play Games\CEF\User Data\Default\Cache\Cache_Data\f_1");
+        Make(@"Google\Play Games\CEF\User Data\Default\GPUCache\data_0");
+        Make(@"Google\Play Games\CEF\User Data\Default\Cookies");
+        Make(@"Google\Play Games\CEF\User Data\Default\Local Storage\leveldb\1.log");
+        Make(@"Google\Play Games\Logs\client.log");
+        Make(@"Google\Play Games\CrashReporting\c.dmp");
+        Make(@"Google\Play Games\startup_flags\f");
+        Make(@"Google\Play Games\userdata_0.cmi\d");
+        var p = new CacheCleaner(t.Path, new FakeBin()).Preview();
+        var names = p.Files.Select(f => Path.GetFileName(f.Path)).OrderBy(n => n).ToArray();
+        Assert.Equal(new[] { "a.png", "data_0", "f_1", "p.png" }, names);
     }
 
     [Fact]
@@ -175,9 +226,11 @@ public class CacheCleanerTests
     {
         using var t = new TempDir();
         var c = new CacheCleaner(t.Path, new FakeBin());
-        Assert.False(c.IsAllowed(t.Combine(Rel(@"Google\Play Games\Cache"))));
-        Assert.False(c.IsAllowed(t.Combine(Rel(@"Google\Play Games\CacheEvil\x.bin"))));
-        Assert.True(c.IsAllowed(t.Combine(Rel(@"Google\Play Games\Cache\x.bin"))));
+        Assert.False(c.IsAllowed(t.Combine(Rel(@"Google\Play Games\image_cache"))));
+        Assert.False(c.IsAllowed(t.Combine(Rel(@"Google\Play Games\image_cache_evil\x.bin"))));
+        Assert.False(c.IsAllowed(t.Combine(Rel(@"Google\Play Games\Cache\x.bin"))));
+        Assert.True(c.IsAllowed(t.Combine(Rel(@"Google\Play Games\image_cache\x.bin"))));
+        Assert.True(c.IsAllowed(t.Combine(Rel(@"Google\Play Games\profile_image_cache\a\x.bin"))));
     }
 
     [Fact]
@@ -186,7 +239,7 @@ public class CacheCleanerTests
         using var t = new TempDir();
         var outside = t.Combine("outside"); Directory.CreateDirectory(outside);
         File.WriteAllText(Path.Combine(outside, "secret.txt"), "s");
-        var cache = t.Combine(Rel(@"Google\Play Games\Cache")); Directory.CreateDirectory(cache);
+        var cache = t.Combine(Rel(@"Google\Play Games\image_cache")); Directory.CreateDirectory(cache);
         try { Directory.CreateSymbolicLink(Path.Combine(cache, "link"), outside); }
         catch (Exception) { return; } // no symlink privilege on this runner
         var p = new CacheCleaner(t.Path, new FakeBin()).Preview();
@@ -253,5 +306,22 @@ public class SettingsAndLauncherTests
         Assert.Equal("Old Game", items[0]["AppName"]);
         Assert.Equal("Cool Game", items[1]["AppName"]);
         Assert.Contains("Cool Game.url", (string)items[1]["LaunchOptions"]!);
+    }
+}
+
+public class GpgpcExecutablesTests
+{
+    [Fact]
+    public void FindsOnlyClientAndCrosvm()
+    {
+        var dir = Directory.CreateTempSubdirectory("vettv-exe-").FullName;
+        try
+        {
+            foreach (var e in new[] { "client.exe", "crosvm.exe", "Service.exe", "Bootstrapper.exe", "gpu_check.exe", "PlayPackageManager.exe", "GooglePlayGames.exe" })
+                File.WriteAllText(Path.Combine(dir, e), "");
+            var found = GpgpcExecutables.Find(dir).Select(Path.GetFileName).OrderBy(n => n).ToArray();
+            Assert.Equal(new[] { "client.exe", "crosvm.exe" }, found);
+        }
+        finally { Directory.Delete(dir, true); }
     }
 }

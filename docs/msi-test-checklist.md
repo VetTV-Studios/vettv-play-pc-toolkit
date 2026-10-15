@@ -23,8 +23,11 @@ Run this on the MSI after installing the MSI package from a draft release, or th
 - [ ] Backup, delete the Desktop shortcut, Restore: shortcut and settings come back.
 
 ### M2 guesses to verify (please report the real values)
-- [ ] **Cache folder names**: list `%LOCALAPPDATA%\Google\Play Games\` and `%LOCALAPPDATA%\Google\Play Games Developer Emulator\` (`dir /ad`). The toolkit assumes `Cache`, `GPUCache`, `Code Cache`, `ShaderCache` (consumer) and `Cache`, `GPUCache` (emulator). Report the actual cache folders and anything that looks like user data.
-- [ ] **Executable names for the GPU preset**: with a game running, Task Manager > Details: note the Google Play Games process names and their paths (right-click > Open file location). The toolkit looks for `client.exe`, `crosvm.exe`, `GooglePlayGames.exe` under the install folder.
+- [x] **Cache folder names**: *verified Oct 15, 2026.* `%LOCALAPPDATA%\Google\Play Games` contains `CEF`, `CrashReporting`, `image_cache`, `Logs`, `profile_image_cache`, `startup_flags`, `userdata_*.cmi`. The allow-list is now `image_cache`, `profile_image_cache`, plus Chromium cache folders inside `CEF` only.
+- [ ] **CEF contents**: run `dir /s /ad "%LOCALAPPDATA%\Google\Play Games\CEF"` and report the folder tree, to confirm the cache folders (e.g. `...\Cache`, `...\GPUCache`) and that cookies/local storage sit elsewhere. Then Clean > Preview should list only files from `image_cache`, `profile_image_cache` and CEF cache folders.
+- [ ] **Developer Emulator cache folders**: list `%LOCALAPPDATA%\Google\Play Games Developer Emulator\` (`dir /ad`). Nothing there is cleaned until it's verified.
+- [x] **Executable names for the GPU preset**: *verified Oct 15, 2026.* `C:\Program Files\Google\Play Games` has `client.exe`, `crosvm.exe`, `Service.exe`, `Bootstrapper.exe`, `gpu_check.exe`, `PlayPackageManager.exe` (no `GooglePlayGames.exe`). The preset now targets `client.exe` and `crosvm.exe` only.
+- [ ] **GPU preset effect**: after Apply, Windows Settings > System > Display > Graphics lists `client.exe` and `crosvm.exe` as High performance, and a game shows load on GPU 1 (NVIDIA). If the game still runs on the iGPU, note which process uses the GPU (Task Manager > Details > "GPU engine" column).
 - [ ] **Install detection source**: `reg query HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /s /f "Google Play Games"`, and note DisplayName, DisplayVersion and InstallLocation.
 - [ ] **Steam multi-account**: if this PC has more than one Steam login, check which account received the shortcut (the toolkit currently uses the first `userdata\<id>` folder). Report how many accounts exist.
 

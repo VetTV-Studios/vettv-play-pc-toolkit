@@ -92,7 +92,8 @@ public sealed class PresetService(IRegistryStore registry, ICommandRunner comman
 
 public static class GpgpcExecutables
 {
-    private static readonly string[] Names = { "client.exe", "crosvm.exe", "GooglePlayGames.exe" };
+    // Verified on a real install: client.exe and crosvm.exe render games; Service.exe, Bootstrapper.exe etc. do not.
+    private static readonly string[] Names = { "client.exe", "crosvm.exe" };
 
     /// <summary>Finds GPGPC executables under the detected install folder for the per-app GPU preference.</summary>
     public static IReadOnlyList<string> Find(string? installPath)
