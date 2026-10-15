@@ -21,9 +21,9 @@ Every system-changing action is opt-in and asks for confirmation first.
 - **Launcher**: finds game shortcuts in the Start Menu `Google Play Games` folders, then launches them, copies them to the Desktop, pins them, or adds them to Steam as a non-Steam game. The Steam entry opens your own shortcut file through Explorer. Steam must be closed, and `shortcuts.vdf` is backed up to `shortcuts.vdf.vettv.bak` first.
 - **Cache cleaner**: allow-list verified on a real install (Oct 2026). Under `%LOCALAPPDATA%\Google\Play Games\` it cleans only:
   - `image_cache\` and `profile_image_cache\` (whole folders);
-  - inside `CEF\` (Chromium Embedded, which also holds cookies and local storage), **only** folders named `Cache`, `Code Cache`, `GPUCache`, `GrShaderCache`, `ShaderCache`, `DawnCache`, `DawnGraphiteCache` or `DawnWebGPUCache`, at most 4 levels deep. Nothing else in CEF is touched.
+  - exactly `CEF\cache\Cache`, `CEF\cache\Code Cache`, `CEF\cache\GPUCache`, `CEF\cache\DawnCache` (and `CEF\cache\GrShaderCache` / `CEF\cache\ShaderCache` if present). These are exact paths with no name matching, so `CEF\cache` itself (which also holds `Local Storage`, `Network` (cookies), `Session Storage` and `blob_storage`), `CEF\Dictionaries` and `CEF\WidevineCdm` are never touched, whatever their letter case. CEF layout verified on the MSI (Oct 15, 2026).
 
-  It **never** cleans `Logs`, `CrashReporting`, `startup_flags` or `userdata_*` (not even when nested), or anything in the Developer Emulator folder (not verified yet). It always shows a preview with sizes first, refuses to run while Google Play Games is open, skips symlinks/junctions, re-checks every path before cleaning, and sends files to the Recycle Bin.
+  It **never** cleans `Logs`, `CrashReporting`, `startup_flags`, `userdata_*`, `Local Storage`, `Network`, `Session Storage`, `blob_storage`, `Dictionaries` or `WidevineCdm` (not even when nested), or anything in the Developer Emulator folder (not verified yet). It always shows a preview with sizes first, refuses to run while Google Play Games is open, skips symlinks/junctions, re-checks every path before cleaning, and sends files to the Recycle Bin.
 - **Backup/restore**: the toolkit's own `settings.json` plus the shortcuts it created, in a zip.
 
 ## M3: Developer Emulator & Polish

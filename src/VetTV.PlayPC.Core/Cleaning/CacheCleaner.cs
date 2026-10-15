@@ -23,25 +23,24 @@ public sealed class WindowsRecycleBin : IRecycleBin
 public sealed class CacheCleaner(string localAppData, IRecycleBin recycleBin)
 {
     /// <summary>
-    /// Relative to %LOCALAPPDATA%. Whole folders that are pure caches (verified on a real install, Oct 2026).
-    /// Logs, CrashReporting, startup_flags and userdata_* are never allowed.
+    /// Relative to %LOCALAPPDATA%. Exact folders only, verified on a real install (Oct 15, 2026). No name matching:
+    /// CEF\cache (lowercase parent) also holds Local Storage, Network (cookies), Session Storage and blob_storage,
+    /// so only its specific Chromium cache children are listed. Paths are compared case-insensitively, as on Windows.
     /// </summary>
     public static IReadOnlyList<string> AllowList { get; } = new[]
     {
         @"Google\Play Games\image_cache",
         @"Google\Play Games\profile_image_cache",
+        @"Google\Play Games\CEF\cache\Cache",
+        @"Google\Play Games\CEF\cache\Code Cache",
+        @"Google\Play Games\CEF\cache\GPUCache",
+        @"Google\Play Games\CEF\cache\DawnCache",
+        @"Google\Play Games\CEF\cache\GrShaderCache",
+        @"Google\Play Games\CEF\cache\ShaderCache",
     };
 
-    /// <summary>
-    /// CEF (Chromium Embedded) mixes caches with cookies/local storage, so only folders with these exact
-    /// Chromium cache names, anywhere under CEF (max depth 4), are allowed. Everything else in CEF is left alone.
-    /// </summary>
-    public const string CefRoot = @"Google\Play Games\CEF";
-    public static IReadOnlyList<string> CefCacheFolderNames { get; } = new[] { "Cache", "Code Cache", "GPUCache", "GrShaderCache", "ShaderCache", "DawnCache", "DawnGraphiteCache", "DawnWebGPUCache" };
-    private const int CefMaxDepth = 4;
-
     /// <summary>Folder names that are never cleaned, even if nested inside an allowed folder.</summary>
-    public static IReadOnlyList<string> NeverAllowed { get; } = new[] { "Logs", "CrashReporting", "startup_flags" };
+    public static IReadOnlyList<string> NeverAllowed { get; } = new[] { "Logs", "CrashReporting", "startup_flags", "Local Storage", "Network", "Session Storage", "blob_storage", "Dictionaries", "WidevineCdm" };
 
     private string Full(string rel) => Path.GetFullPath(Path.Combine(localAppData, rel.Replace('\\', Path.DirectorySeparatorChar)));
 
@@ -54,22 +53,11 @@ public sealed class CacheCleaner(string localAppData, IRecycleBin recycleBin)
     public bool IsAllowed(string path)
     {
         var full = Path.GetFullPath(path);
-        string[] segs;
-        if (AllowedRoots().Any(r => Under(full, r)))
-            segs = full.Split(Path.DirectorySeparatorChar);
-        else
-        {
-            var cef = Full(CefRoot);
-            if (!Under(full, cef)) return false;
-            var rel = Path.GetRelativePath(cef, full).Split(Path.DirectorySeparatorChar);
-            // Some ancestor folder (not the file itself) within the depth limit must be a Chromium cache folder.
-            var idx = Array.FindIndex(rel, 0, Math.Min(rel.Length - 1, CefMaxDepth),
-                seg => CefCacheFolderNames.Contains(seg, StringComparer.OrdinalIgnoreCase));
-            if (idx < 0) return false;
-            segs = rel;
-        }
-        return !segs.Any(seg => NeverAllowed.Contains(seg, StringComparer.OrdinalIgnoreCase)
-                             || seg.StartsWith("userdata", StringComparison.OrdinalIgnoreCase));
+        var root = AllowedRoots().FirstOrDefault(r => Under(full, r));
+        if (root is null) return false;
+        var rel = Path.GetRelativePath(root, full).Split(Path.DirectorySeparatorChar);
+        return !rel.Any(seg => NeverAllowed.Contains(seg, StringComparer.OrdinalIgnoreCase)
+                            || seg.StartsWith("userdata", StringComparison.OrdinalIgnoreCase));
     }
 
     public CachePreview Preview()
@@ -82,20 +70,7 @@ public sealed class CacheCleaner(string localAppData, IRecycleBin recycleBin)
             if (IsReparsePoint(root)) { skipped.Add(root); continue; }
             Walk(root, files, skipped);
         }
-        var cefRoot = Full(CefRoot);
-        if (Directory.Exists(cefRoot) && !IsReparsePoint(cefRoot)) FindCefCaches(cefRoot, 0, files, skipped);
         return new CachePreview(files, skipped);
-    }
-
-    private void FindCefCaches(string dir, int depth, List<CacheFile> files, List<string> skipped)
-    {
-        if (depth >= CefMaxDepth) return;
-        foreach (var d in Directory.EnumerateDirectories(dir))
-        {
-            if (IsReparsePoint(d)) { skipped.Add(d); continue; }
-            if (CefCacheFolderNames.Contains(Path.GetFileName(d), StringComparer.OrdinalIgnoreCase)) Walk(d, files, skipped);
-            else FindCefCaches(d, depth + 1, files, skipped);
-        }
     }
 
     private void Walk(string dir, List<CacheFile> files, List<string> skipped)
